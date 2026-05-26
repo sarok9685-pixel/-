@@ -1376,6 +1376,13 @@ function toggleShiftFilter(cls) {
     renderAlarms();
     showAlarmStatus(`✅ تم تفعيل جميع التنبيهات لوجبة ${cls === 'A' ? 'أ' : cls === 'B' ? 'ب' : cls === 'C' ? 'ج' : 'د'}`);
     requestNotificationPermission();
+  } else {
+    ALARMS.forEach(a => {
+      alarmStates[a.id] = false;
+      localStorage.setItem('alarmState_' + a.id, 'false');
+    });
+    renderAlarms();
+    showAlarmStatus(`🔕 تم إيقاف جميع التنبيهات`);
   }
 }
 
