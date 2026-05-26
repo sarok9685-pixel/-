@@ -533,6 +533,40 @@
   }
   .alarm-status.show { opacity: 1; }
 
+  /* ─── Fuel Alarm Item ─────────────────────────────── */
+  .fuel-alarm-item {
+    border: 1px solid rgba(224,168,74,0.3) !important;
+    background: rgba(224,168,74,0.04) !important;
+    position: relative;
+    overflow: hidden;
+  }
+  .fuel-alarm-item::before {
+    content: '⛽';
+    position: absolute;
+    font-size: 50px;
+    opacity: 0.04;
+    left: -6px;
+    bottom: -6px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .fuel-alarm-item.active-fuel-alarm {
+    border-color: rgba(224,168,74,0.6) !important;
+    background: rgba(224,168,74,0.09) !important;
+    box-shadow: 0 0 12px rgba(224,168,74,0.15);
+  }
+  .fuel-alarm-item.fuel-day-active.active-fuel-alarm {
+    border-color: rgba(224,168,74,0.85) !important;
+    background: rgba(224,168,74,0.15) !important;
+    box-shadow: 0 0 20px rgba(224,168,74,0.3);
+    animation: fuelPulse 2s ease-in-out infinite;
+  }
+  @keyframes fuelPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(224,168,74,0.25); }
+    50%       { box-shadow: 0 0 28px rgba(224,168,74,0.55); }
+  }
+  .alarm-toggle[style*="background:#e0a84a"]::after { left: 23px; }
+
   /* ── About pane ── */
   .about-section {
     padding: 16px 8px;
@@ -1471,7 +1505,41 @@ const ALARMS = [
   { id: 'alarm-18',   hour: 18, min: 0,  label: '١٨:٠٠', desc: 'بصمة مسائية',                   icon: '🌆' },
   { id: 'alarm-23',   hour: 23, min: 0,  label: '٢٣:٠٠', desc: 'بصمة ليلية',                    icon: '🌙' },
   { id: 'alarm-07n',  hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بصمة صباحية — نهاية الوجبة',   icon: '🌄', nextDay: true },
+  { id: 'alarm-fuel', hour: 12, min: 0,  label: '١٢:٠٠', desc: '⛽ تنبيه استلام حصة البنزين — غداً', icon: '⛽', fuelAlarm: true },
 ];
+
+// ─── Fuel Alarm Logic ─────────────────────────────────────────────────────────
+// تاريخ البداية: 25 مايو 2025، كل 5 أيام تُستلم حصة بنزين
+// التنبيه يصدر في الساعة 12:00 من اليوم الرابع في كل دورة (أي قبل 12 ساعة من منتصف ليلة اليوم الخامس)
+const FUEL_ALARM_START = new Date(2025, 4, 25); // 25/5/2025
+
+function isFuelAlarmDay() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startDay = new Date(FUEL_ALARM_START);
+  startDay.setHours(0, 0, 0, 0);
+  const diffMs = today - startDay;
+  if (diffMs < 0) return false;
+  const diffDays = Math.floor(diffMs / 86400000);
+  // نهاية كل دورة هي اليوم رقم 4 (0-indexed) في كل دورة 5 أيام
+  // التنبيه في اليوم الرابع (diffDays % 5 === 4) بالساعة 12:00
+  // أي قبل 12 ساعة من انتهاء الدورة (منتصف الليل بداية اليوم الخامس/الأول من الدورة التالية)
+  return (diffDays % 5) === 4;
+}
+
+function getNextFuelDate() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startDay = new Date(FUEL_ALARM_START);
+  startDay.setHours(0, 0, 0, 0);
+  const diffMs = today - startDay;
+  if (diffMs < 0) return FUEL_ALARM_START;
+  const diffDays = Math.floor(diffMs / 86400000);
+  const daysUntilNext = 5 - (diffDays % 5);
+  const nextDate = new Date(today);
+  nextDate.setDate(today.getDate() + daysUntilNext);
+  return nextDate;
+}
 
 // Load saved states from localStorage
 const alarmStates = {};
@@ -1491,6 +1559,58 @@ function renderAlarms() {
   if (btn) btn.textContent = allOn ? '🔕 إيقاف جميع المنبهات' : '🔔 تفعيل جميع المنبهات';
   ALARMS.forEach(a => {
     const item = document.createElement('div');
+
+    // Fuel alarm: special styling
+    if (a.fuelAlarm) {
+      const nextFuel = getNextFuelDate();
+      const dayNames2 = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+      const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+      const diffToNext = Math.round((nextFuel - todayMidnight) / 86400000);
+      const nextFuelStr = `${nextFuel.getDate()}/${nextFuel.getMonth()+1}/${nextFuel.getFullYear()}`;
+      let fuelStatus = '';
+      if (diffToNext === 0) {
+        fuelStatus = `<span style="color:#6db87a;font-weight:700">● اليوم يوم الاستلام!</span>`;
+      } else if (diffToNext === 1) {
+        fuelStatus = `<span style="color:var(--accent2)">⚠️ غداً يوم الاستلام — ${nextFuelStr}</span>`;
+      } else {
+        fuelStatus = `<span style="color:var(--muted)">الاستلام القادم: ${nextFuelStr} (بعد ${diffToNext} يوم)</span>`;
+      }
+      const isFuelDay = isFuelAlarmDay();
+      item.className = 'alarm-item fuel-alarm-item' + (alarmStates[a.id] ? ' active-alarm active-fuel-alarm' : '') + (isFuelDay ? ' fuel-day-active' : '');
+      item.id = 'item-' + a.id;
+
+      // Check if alarm fires today (fuel day)
+      const alarmToday2 = new Date();
+      alarmToday2.setHours(a.hour, a.min, 0, 0);
+      const msLeft2 = alarmToday2 - now3;
+      const upcoming2 = isFuelDay && msLeft2 > 0 && msLeft2 < 3 * 60 * 60 * 1000 && alarmStates[a.id];
+      const timeUntil2 = msLeft2 > 0 ? formatCountdown(msLeft2) : '';
+
+      item.innerHTML = `
+        <div class="alarm-item-info">
+          <span style="font-size:20px">⛽</span>
+          <div>
+            <div class="alarm-time${alarmStates[a.id] ? ' active-alarm' : ''}" style="font-size:15px;color:${alarmStates[a.id]?'#e0a84a':'var(--light)'}">
+              تنبيه حصة البنزين
+            </div>
+            <div class="alarm-desc" style="margin-top:2px">
+              كل ٥ أيام من 25/5/2025 — تنبيه الساعة ١٢:٠٠
+            </div>
+            <div class="alarm-desc" style="margin-top:3px">${fuelStatus}</div>
+            ${upcoming2 ? `<div class="alarm-desc" style="color:var(--accent2);margin-top:2px">🔔 بعد ${timeUntil2}</div>` : ''}
+            ${isFuelDay && !upcoming2 && now3.getHours() >= a.hour ? `<div class="alarm-desc" style="color:#6db87a;margin-top:2px">✅ تم إرسال التنبيه اليوم</div>` : ''}
+          </div>
+        </div>
+        <button class="alarm-toggle${alarmStates[a.id] ? ' on' : ''}" 
+                onclick="toggleAlarm('${a.id}')" 
+                title="${alarmStates[a.id] ? 'إيقاف المنبه' : 'تفعيل المنبه'}"
+                style="${alarmStates[a.id] ? 'background:#e0a84a' : ''}">
+        </button>
+      `;
+      list.appendChild(item);
+      return;
+    }
+
     item.className = 'alarm-item' + (alarmStates[a.id] ? ' active-alarm' : '');
     item.id = 'item-' + a.id;
 
@@ -1573,15 +1693,26 @@ function checkAlarms() {
   if (s > 30) return; // Only fire in first 30s of the minute
   ALARMS.forEach(a => {
     if (!alarmStates[a.id]) return;
+
+    // Fuel alarm: only fire on fuel alarm days
+    if (a.fuelAlarm) {
+      if (!isFuelAlarmDay()) return;
+    }
+
     if (a.hour === h && a.min === m) {
+      const alarmDesc = a.fuelAlarm
+        ? '⛽ غداً يوم استلام حصة البنزين! تذكر الاستلام.'
+        : `${a.icon} ${a.desc} — ${a.label}`;
+      const alarmTitle = a.fuelAlarm ? '⛽ تنبيه حصة البنزين' : '🔔 تنبيه وجبة';
+
       if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`🔔 تنبيه وجبة`, {
-          body: `${a.icon} ${a.desc} — ${a.label}`,
+        new Notification(alarmTitle, {
+          body: alarmDesc,
           icon: '/favicon.ico'
         });
       }
       // Visual + audio fallback
-      showAlarmStatus(`🔔 ${a.icon} ${a.desc}!`);
+      showAlarmStatus(`🔔 ${alarmDesc}`);
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -1613,12 +1744,21 @@ function checkAlarms() {
           o.stop(startTime + duration);
         }
 
-        // 8 نبضات متكررة بنغمتين متناوبتين (مثل منبه حقيقي)
         const now = ctx.currentTime;
-        for (let i = 0; i < 8; i++) {
-          const t = now + i * 0.35;
-          beep(1100, t, 0.25);          // نغمة عالية
-          beep(880,  t + 0.18, 0.15);  // نغمة ثانية
+        if (a.fuelAlarm) {
+          // نمط صوتي مميز لتنبيه البنزين (3 نبضات قوية)
+          for (let i = 0; i < 12; i++) {
+            const t = now + i * 0.3;
+            beep(880, t, 0.2);
+            beep(1320, t + 0.12, 0.15);
+          }
+        } else {
+          // 8 نبضات متكررة بنغمتين متناوبتين (مثل منبه حقيقي)
+          for (let i = 0; i < 8; i++) {
+            const t = now + i * 0.35;
+            beep(1100, t, 0.25);          // نغمة عالية
+            beep(880,  t + 0.18, 0.15);  // نغمة ثانية
+          }
         }
       } catch(e) {}
     }
