@@ -872,7 +872,7 @@
     <div class="shift-badge shift-C" id="badge-C" onclick="toggleShiftFilter('C')"><div class="shift-dot"></div>وجبة ج</div>
     <div class="shift-badge shift-D" id="badge-D" onclick="toggleShiftFilter('D')"><div class="shift-dot"></div>وجبة د</div>
     <div id="fuelCalIcon" onclick="toggleFuelCalendar()" title="تلوين التقويم كل ٥ أيام"
-      style="cursor:pointer;font-size:20px;transition:transform 0.2s,filter 0.2s;user-select:none;display:flex;align-items:center;padding:0 4px;">⛽</div>
+      style="cursor:pointer;font-size:28px;transition:transform 0.2s,filter 0.2s;user-select:none;display:flex;align-items:center;padding:0 4px;">⛽</div>
   </div>
   <div id="fuelStatusMsg" style="text-align:center;font-size:11px;color:var(--accent2);min-height:14px;opacity:0;transition:opacity 0.4s;margin-bottom:4px;"></div>
 
@@ -965,7 +965,7 @@
   <div class="alarm-section" id="alarmSection">
     <div class="alarm-title">🔔 منبهات الوجبات</div>
     <div class="alarm-list" id="alarmList"></div>
-    <button class="alarm-set-all" onclick="setAllAlarms()">تفعيل جميع المنبهات</button>
+    <button class="alarm-set-all" id="alarmToggleAllBtn" onclick="setAllAlarms()">تفعيل جميع المنبهات</button>
     <div class="alarm-status" id="alarmStatus"></div>
   </div>
 
@@ -1363,8 +1363,20 @@ setInterval(updateShiftPanel, 60000);
 let activeShiftFilter = null; // null = show all, 'A'/'B'/'C'/'D' = filter
 
 function toggleShiftFilter(cls) {
-  activeShiftFilter = (activeShiftFilter === cls) ? null : cls;
+  const wasActive = activeShiftFilter === cls;
+  activeShiftFilter = wasActive ? null : cls;
   applyShiftFilter();
+
+  // عند اختيار وجبة → تفعيل جميع التنبيهات تلقائياً
+  if (!wasActive) {
+    ALARMS.forEach(a => {
+      alarmStates[a.id] = true;
+      localStorage.setItem('alarmState_' + a.id, 'true');
+    });
+    renderAlarms();
+    showAlarmStatus(`✅ تم تفعيل جميع التنبيهات لوجبة ${cls === 'A' ? 'أ' : cls === 'B' ? 'ب' : cls === 'C' ? 'ج' : 'د'}`);
+    requestNotificationPermission();
+  }
 }
 
 function applyShiftFilter() {
@@ -1447,11 +1459,11 @@ window.renderMiladi = function() {
 
 // ─── Alarm System ────────────────────────────────────────────────────────────
 const ALARMS = [
-  { id: 'alarm-07',   hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بداية الوجبة الصباحية',    icon: '🌅' },
-  { id: 'alarm-13',   hour: 13, min: 0,  label: '١٣:٠٠', desc: 'وجبة الظهر',               icon: '☀️' },
-  { id: 'alarm-18',   hour: 18, min: 0,  label: '١٨:٠٠', desc: 'وجبة المساء',              icon: '🌆' },
-  { id: 'alarm-23',   hour: 23, min: 0,  label: '٢٣:٠٠', desc: 'وجبة الليل',              icon: '🌙' },
-  { id: 'alarm-07n',  hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بداية وجبة اليوم التالي', icon: '🌄', nextDay: true },
+  { id: 'alarm-07',   hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بصمة صباحية — بداية الوجبة',   icon: '🌅' },
+  { id: 'alarm-13',   hour: 13, min: 0,  label: '١٣:٠٠', desc: 'بصمة ظهرية',                    icon: '☀️' },
+  { id: 'alarm-18',   hour: 18, min: 0,  label: '١٨:٠٠', desc: 'بصمة مسائية',                   icon: '🌆' },
+  { id: 'alarm-23',   hour: 23, min: 0,  label: '٢٣:٠٠', desc: 'بصمة ليلية',                    icon: '🌙' },
+  { id: 'alarm-07n',  hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بصمة صباحية — نهاية الوجبة',   icon: '🌄', nextDay: true },
 ];
 
 // Load saved states from localStorage
@@ -1463,8 +1475,13 @@ ALARMS.forEach(a => {
 
 function renderAlarms() {
   const list = document.getElementById('alarmList');
+  if (!list) return;
   list.innerHTML = '';
   const now3 = new Date();
+  // Update toggle-all button label
+  const allOn = ALARMS.every(a => alarmStates[a.id]);
+  const btn = document.getElementById('alarmToggleAllBtn');
+  if (btn) btn.textContent = allOn ? '🔕 إيقاف جميع المنبهات' : '🔔 تفعيل جميع المنبهات';
   ALARMS.forEach(a => {
     const item = document.createElement('div');
     item.className = 'alarm-item' + (alarmStates[a.id] ? ' active-alarm' : '');
@@ -1517,13 +1534,14 @@ function toggleAlarm(id) {
 }
 
 function setAllAlarms() {
+  const allOn = ALARMS.every(a => alarmStates[a.id]);
   ALARMS.forEach(a => {
-    alarmStates[a.id] = true;
-    localStorage.setItem('alarmState_' + a.id, 'true');
+    alarmStates[a.id] = !allOn;
+    localStorage.setItem('alarmState_' + a.id, String(!allOn));
   });
   renderAlarms();
-  showAlarmStatus('✅ تم تفعيل جميع المنبهات الخمسة');
-  requestNotificationPermission();
+  showAlarmStatus(allOn ? '🔕 تم إيقاف جميع المنبهات' : '✅ تم تفعيل جميع المنبهات');
+  if (!allOn) requestNotificationPermission();
 }
 
 function showAlarmStatus(msg) {
@@ -1559,18 +1577,42 @@ function checkAlarms() {
       showAlarmStatus(`🔔 ${a.icon} ${a.desc}!`);
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        [0, 200, 400].forEach(delay => {
-          setTimeout(() => {
-            const o = ctx.createOscillator();
-            const g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.frequency.value = 880;
-            g.gain.setValueAtTime(0.3, ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-            o.start(ctx.currentTime);
-            o.stop(ctx.currentTime + 0.4);
-          }, delay);
-        });
+
+        // Compressor to maximize loudness
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.value = -6;
+        compressor.knee.value = 0;
+        compressor.ratio.value = 20;
+        compressor.attack.value = 0;
+        compressor.release.value = 0.1;
+        compressor.connect(ctx.destination);
+
+        // Master gain — رفع الصوت للحد الأقصى
+        const master = ctx.createGain();
+        master.gain.value = 2.5;
+        master.connect(compressor);
+
+        // دالة لإنشاء نبضة صوتية واحدة
+        function beep(freq, startTime, duration) {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'square'; // موجة مربعة = أعلى وأحدة
+          o.frequency.value = freq;
+          g.gain.setValueAtTime(1.0, startTime);
+          g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+          o.connect(g);
+          g.connect(master);
+          o.start(startTime);
+          o.stop(startTime + duration);
+        }
+
+        // 8 نبضات متكررة بنغمتين متناوبتين (مثل منبه حقيقي)
+        const now = ctx.currentTime;
+        for (let i = 0; i < 8; i++) {
+          const t = now + i * 0.35;
+          beep(1100, t, 0.25);          // نغمة عالية
+          beep(880,  t + 0.18, 0.15);  // نغمة ثانية
+        }
       } catch(e) {}
     }
   });
