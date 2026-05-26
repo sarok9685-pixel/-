@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>التقويم الميلادي والهجري</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Tajawal:wght@300;400;500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d0d14;
@@ -435,44 +435,86 @@
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 14px 16px;
     margin-top: 14px;
+    overflow: hidden;
   }
-  .alarm-title {
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+  .alarm-combo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    transition: background 0.2s;
+  }
+  .alarm-combo-header:hover { background: rgba(201,168,76,0.06); }
+  .alarm-combo-arrow {
+    font-size: 18px;
     color: var(--muted);
-    opacity: 0.6;
-    text-align: center;
-    margin-bottom: 12px;
+    transition: transform 0.3s ease;
+    line-height: 1;
+  }
+  .alarm-combo-arrow.open { transform: rotate(90deg); }
+  .alarm-combo-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.3s ease;
+    padding: 0 16px;
+  }
+  .alarm-combo-body.open {
+    max-height: 500px;
+    padding: 0 16px 14px;
   }
   .alarm-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
+    padding-top: 8px;
   }
   .alarm-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 12px;
+    gap: 12px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    user-select: none;
+  }
+  .alarm-item:hover { background: rgba(255,255,255,0.04); }
+  .alarm-item.active-alarm { background: rgba(201,168,76,0.06); }
+
+  /* Checkbox */
+  .alarm-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 2px solid var(--muted);
+    background: transparent;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s ease;
+    font-size: 11px;
+    color: var(--bg);
   }
-  .alarm-item.active-alarm {
-    border-color: rgba(201,168,76,0.5);
-    background: rgba(201,168,76,0.07);
+  .alarm-item.active-alarm .alarm-checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
   }
-  .alarm-item-info { display: flex; align-items: center; gap: 10px; }
+  .alarm-item.active-alarm .alarm-checkbox::after { content: '✓'; }
+
+  .alarm-item-info { display: flex; align-items: center; gap: 10px; flex: 1; }
   .alarm-time {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
-    color: var(--light);
+    color: var(--muted);
     font-family: 'Playfair Display', serif;
-    min-width: 52px;
+    min-width: 48px;
     letter-spacing: 1px;
   }
   .alarm-time.active-alarm { color: var(--accent2); }
@@ -481,31 +523,8 @@
     color: var(--muted);
     line-height: 1.4;
   }
-  .alarm-toggle {
-    width: 42px;
-    height: 22px;
-    border-radius: 11px;
-    background: var(--border);
-    position: relative;
-    cursor: pointer;
-    border: none;
-    transition: background 0.25s ease;
-    flex-shrink: 0;
-  }
-  .alarm-toggle.on { background: var(--accent); }
-  .alarm-toggle::after {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    top: 3px;
-    left: 3px;
-    transition: left 0.25s ease;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  }
-  .alarm-toggle.on::after { left: 23px; }
+  .alarm-item.active-alarm .alarm-desc { color: var(--light); opacity: 0.7; }
+
   .alarm-set-all {
     display: block;
     width: 100%;
@@ -639,6 +658,96 @@
     color: var(--muted);
     padding-top: 4px;
   }
+
+  /* ─── About Fuel Block ───────────────────────────────────── */
+  .about-fuel-block {
+    background: linear-gradient(135deg, rgba(224,168,74,0.1) 0%, rgba(15,52,96,0.4) 100%) !important;
+    border-color: rgba(224,168,74,0.4) !important;
+    padding: 16px !important;
+  }
+  .about-fuel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .about-fuel-icon {
+    font-size: 32px;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(224,168,74,0.5));
+  }
+  .about-fuel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e0a84a;
+    margin-bottom: 2px;
+  }
+  .about-fuel-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .about-fuel-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(224,168,74,0.4), transparent);
+    margin-bottom: 12px;
+  }
+  .about-fuel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .about-fuel-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(224,168,74,0.2);
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .about-fuel-stat-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .about-fuel-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e0a84a;
+    font-family: 'Playfair Display', serif;
+  }
+  .about-fuel-progress-wrap { margin-bottom: 10px; }
+  .about-fuel-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .about-fuel-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .about-fuel-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #c96c6c, #e0a84a, #6db87a);
+    transition: width 0.6s ease;
+  }
+  .about-fuel-status {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 18px;
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+  .about-fuel-status.today  { color: #6db87a; background: rgba(109,184,122,0.12); border: 1px solid rgba(109,184,122,0.3); }
+  .about-fuel-status.soon   { color: #e0a84a; background: rgba(224,168,74,0.12);  border: 1px solid rgba(224,168,74,0.35); }
+  .about-fuel-status.normal { color: var(--muted); background: transparent; border: 1px solid var(--border); }
   .about-dev-block {
     background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(100,80,180,0.08));
     border-color: rgba(201,168,76,0.35) !important;
@@ -968,10 +1077,8 @@
 
       <div class="about-block about-dev-block">
         <div class="about-dev-label">إعداد وتصميم</div>
-        <div class="about-dev-name">المهندس محمد محي الدين عمر</div>
+        <div class="about-dev-name" style="font-family:'Amiri','Scheherazade New',serif;font-size:20px;letter-spacing:1px;">المهندس محمد محي الدين عمر الجباري</div>
         <div class="about-dev-divider"></div>
-        <div class="about-dev-row">🏢 قسم حماية المنشآت النفطية</div>
-        <div class="about-dev-row">🖥️ شعبة مراقبة الحماية الإلكترونية</div>
         <div class="about-dev-row">📞 <a class="about-phone" href="tel:07701264441">07701264441</a></div>
       </div>
       <div class="about-block">
@@ -991,16 +1098,22 @@
         <div class="about-block-title">🔔 المنبهات</div>
         <div class="about-block-body">يمكن تفعيل تنبيهات تلقائية قبل بداية كل وجبة من قسم المنبهات.</div>
       </div>
+
       <div class="about-footer">صُمِّم بعناية لمتابعة جداول العمل بدقة</div>
     </div>
   </div>
 
   <!-- ALARM SECTION -->
   <div class="alarm-section" id="alarmSection">
-    <div class="alarm-title">🔔 منبهات الوجبات</div>
-    <div class="alarm-list" id="alarmList"></div>
-    <button class="alarm-set-all" id="alarmToggleAllBtn" onclick="setAllAlarms()">تفعيل جميع المنبهات</button>
-    <div class="alarm-status" id="alarmStatus"></div>
+    <div class="alarm-combo-header" id="alarmComboHeader" onclick="toggleAlarmCombo()">
+      <span>🔔 منبهات الوجبات</span>
+      <span class="alarm-combo-arrow" id="alarmComboArrow">›</span>
+    </div>
+    <div class="alarm-combo-body" id="alarmComboBody">
+      <div class="alarm-list" id="alarmList"></div>
+      <button class="alarm-set-all" id="alarmToggleAllBtn" onclick="setAllAlarms()">تفعيل جميع المنبهات</button>
+      <div class="alarm-status" id="alarmStatus"></div>
+    </div>
   </div>
 
   <!-- HIJRI PANE -->
@@ -1120,6 +1233,7 @@ function switchTab(tab) {
   // Hide legend and alarm when on about tab
   document.querySelector('.shift-legend').style.display = tab === 'about' ? 'none' : '';
   document.getElementById('alarmSection').style.display = tab === 'about' ? 'none' : '';
+  if (tab === 'about') return;
 }
 
 // ─── Miladi render ───────────────────────────────────────────────────────────
@@ -1505,7 +1619,6 @@ const ALARMS = [
   { id: 'alarm-18',   hour: 18, min: 0,  label: '١٨:٠٠', desc: 'بصمة مسائية',                   icon: '🌆' },
   { id: 'alarm-23',   hour: 23, min: 0,  label: '٢٣:٠٠', desc: 'بصمة ليلية',                    icon: '🌙' },
   { id: 'alarm-07n',  hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بصمة صباحية — نهاية الوجبة',   icon: '🌄', nextDay: true },
-  { id: 'alarm-fuel', hour: 12, min: 0,  label: '١٢:٠٠', desc: '⛽ تنبيه استلام حصة البنزين — غداً', icon: '⛽', fuelAlarm: true },
 ];
 
 // ─── Fuel Alarm Logic ─────────────────────────────────────────────────────────
@@ -1544,6 +1657,7 @@ function getNextFuelDate() {
 // Load saved states from localStorage
 const alarmStates = {};
 ALARMS.forEach(a => {
+  if (a.fuelAlarm) { alarmStates[a.id] = true; return; } // دائماً مفعّل
   const saved = localStorage.getItem('alarmState_' + a.id);
   alarmStates[a.id] = saved !== null ? saved === 'true' : false;
 });
@@ -1553,8 +1667,8 @@ function renderAlarms() {
   if (!list) return;
   list.innerHTML = '';
   const now3 = new Date();
-  // Update toggle-all button label
-  const allOn = ALARMS.every(a => alarmStates[a.id]);
+  // Update toggle-all button label (exclude fuel alarm)
+  const allOn = ALARMS.filter(a => !a.fuelAlarm).every(a => alarmStates[a.id]);
   const btn = document.getElementById('alarmToggleAllBtn');
   if (btn) btn.textContent = allOn ? '🔕 إيقاف جميع المنبهات' : '🔔 تفعيل جميع المنبهات';
   ALARMS.forEach(a => {
@@ -1576,21 +1690,21 @@ function renderAlarms() {
         fuelStatus = `<span style="color:var(--muted)">الاستلام القادم: ${nextFuelStr} (بعد ${diffToNext} يوم)</span>`;
       }
       const isFuelDay = isFuelAlarmDay();
-      item.className = 'alarm-item fuel-alarm-item' + (alarmStates[a.id] ? ' active-alarm active-fuel-alarm' : '') + (isFuelDay ? ' fuel-day-active' : '');
+      item.className = 'alarm-item fuel-alarm-item active-alarm active-fuel-alarm' + (isFuelDay ? ' fuel-day-active' : '');
       item.id = 'item-' + a.id;
 
       // Check if alarm fires today (fuel day)
       const alarmToday2 = new Date();
       alarmToday2.setHours(a.hour, a.min, 0, 0);
       const msLeft2 = alarmToday2 - now3;
-      const upcoming2 = isFuelDay && msLeft2 > 0 && msLeft2 < 3 * 60 * 60 * 1000 && alarmStates[a.id];
+      const upcoming2 = isFuelDay && msLeft2 > 0 && msLeft2 < 3 * 60 * 60 * 1000;
       const timeUntil2 = msLeft2 > 0 ? formatCountdown(msLeft2) : '';
 
       item.innerHTML = `
         <div class="alarm-item-info">
           <span style="font-size:20px">⛽</span>
           <div>
-            <div class="alarm-time${alarmStates[a.id] ? ' active-alarm' : ''}" style="font-size:15px;color:${alarmStates[a.id]?'#e0a84a':'var(--light)'}">
+            <div class="alarm-time active-alarm" style="font-size:15px;color:#e0a84a">
               تنبيه حصة البنزين
             </div>
             <div class="alarm-desc" style="margin-top:2px">
@@ -1601,11 +1715,6 @@ function renderAlarms() {
             ${isFuelDay && !upcoming2 && now3.getHours() >= a.hour ? `<div class="alarm-desc" style="color:#6db87a;margin-top:2px">✅ تم إرسال التنبيه اليوم</div>` : ''}
           </div>
         </div>
-        <button class="alarm-toggle${alarmStates[a.id] ? ' on' : ''}" 
-                onclick="toggleAlarm('${a.id}')" 
-                title="${alarmStates[a.id] ? 'إيقاف المنبه' : 'تفعيل المنبه'}"
-                style="${alarmStates[a.id] ? 'background:#e0a84a' : ''}">
-        </button>
       `;
       list.appendChild(item);
       return;
@@ -1623,18 +1732,16 @@ function renderAlarms() {
     const timeUntil = msLeft > 0 ? formatCountdown(msLeft) : '';
 
     item.innerHTML = `
+      <div class="alarm-checkbox"></div>
       <div class="alarm-item-info">
-        <span style="font-size:16px">${a.icon}</span>
+        <span style="font-size:15px">${a.icon}</span>
         <div>
           <div class="alarm-time${alarmStates[a.id] ? ' active-alarm' : ''}">${a.label}</div>
           <div class="alarm-desc">${a.desc}${upcoming ? ` <span style="color:var(--accent2)">• بعد ${timeUntil}</span>` : ''}</div>
         </div>
       </div>
-      <button class="alarm-toggle${alarmStates[a.id] ? ' on' : ''}" 
-              onclick="toggleAlarm('${a.id}')" 
-              title="${alarmStates[a.id] ? 'إيقاف المنبه' : 'تفعيل المنبه'}">
-      </button>
     `;
+    item.addEventListener('click', () => toggleAlarm(a.id));
     list.appendChild(item);
   });
 }
@@ -1648,10 +1755,11 @@ function formatCountdown(ms) {
 }
 
 function toggleAlarm(id) {
+  const alarm = ALARMS.find(a => a.id === id);
+  if (alarm && alarm.fuelAlarm) return; // لا يمكن إيقافه
   alarmStates[id] = !alarmStates[id];
   localStorage.setItem('alarmState_' + id, alarmStates[id]);
   renderAlarms();
-  const alarm = ALARMS.find(a => a.id === id);
   if (alarm) {
     showAlarmStatus(alarmStates[id]
       ? `✅ تم تفعيل منبه ${alarm.label}`
@@ -1661,8 +1769,9 @@ function toggleAlarm(id) {
 }
 
 function setAllAlarms() {
-  const allOn = ALARMS.every(a => alarmStates[a.id]);
-  ALARMS.forEach(a => {
+  const nonFuel = ALARMS.filter(a => !a.fuelAlarm);
+  const allOn = nonFuel.every(a => alarmStates[a.id]);
+  nonFuel.forEach(a => {
     alarmStates[a.id] = !allOn;
     localStorage.setItem('alarmState_' + a.id, String(!allOn));
   });
@@ -1686,89 +1795,110 @@ function requestNotificationPermission() {
   }
 }
 
-// Check alarms every 30 seconds and fire notifications
+// ─── AudioContext مُهيَّأ مسبقاً عند أول تفاعل ───────────────────────────────
+let sharedAudioCtx = null;
+function getAudioCtx() {
+  if (!sharedAudioCtx) {
+    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+  return sharedAudioCtx;
+}
+document.addEventListener('click', () => { try { getAudioCtx(); } catch(e){} }, { once: true });
+
+function playAlarmSound(isFuel) {
+  try {
+    const ctx = getAudioCtx();
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -6;
+    compressor.knee.value = 0;
+    compressor.ratio.value = 20;
+    compressor.attack.value = 0;
+    compressor.release.value = 0.1;
+    compressor.connect(ctx.destination);
+
+    const master = ctx.createGain();
+    master.gain.value = 2.5;
+    master.connect(compressor);
+
+    function beep(freq, startTime, duration) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(1.0, startTime);
+      g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      o.connect(g);
+      g.connect(master);
+      o.start(startTime);
+      o.stop(startTime + duration);
+    }
+
+    const t0 = ctx.currentTime;
+    if (isFuel) {
+      for (let i = 0; i < 12; i++) {
+        beep(880,  t0 + i * 0.3, 0.2);
+        beep(1320, t0 + i * 0.3 + 0.12, 0.15);
+      }
+    } else {
+      for (let i = 0; i < 8; i++) {
+        beep(1100, t0 + i * 0.35, 0.25);
+        beep(880,  t0 + i * 0.35 + 0.18, 0.15);
+      }
+    }
+  } catch(e) { console.warn('Audio error:', e); }
+}
+
+// ─── جدولة دقيقة بـ setTimeout بدلاً من setInterval ─────────────────────────
+const firedAlarms = {}; // منع إطلاق نفس المنبه مرتين في نفس الدقيقة
+
+function scheduleNextCheck() {
+  const now5 = new Date();
+  const msToNextMinute = (60 - now5.getSeconds()) * 1000 - now5.getMilliseconds() + 200;
+  setTimeout(() => {
+    checkAlarms();
+    scheduleNextCheck();
+  }, msToNextMinute);
+}
+
 function checkAlarms() {
   const now4 = new Date();
-  const h = now4.getHours(), m = now4.getMinutes(), s = now4.getSeconds();
-  if (s > 30) return; // Only fire in first 30s of the minute
+  const h = now4.getHours(), m = now4.getMinutes();
+  const minuteKey = `${now4.getFullYear()}-${now4.getMonth()}-${now4.getDate()}-${h}-${m}`;
+
   ALARMS.forEach(a => {
     if (!alarmStates[a.id]) return;
+    if (a.fuelAlarm && !isFuelAlarmDay()) return;
+    if (a.hour !== h || a.min !== m) return;
 
-    // Fuel alarm: only fire on fuel alarm days
-    if (a.fuelAlarm) {
-      if (!isFuelAlarmDay()) return;
+    const fireKey = a.id + '-' + minuteKey;
+    if (firedAlarms[fireKey]) return; // سبق إطلاقه
+    firedAlarms[fireKey] = true;
+
+    const alarmDesc = a.fuelAlarm
+      ? '⛽ غداً يوم استلام حصة البنزين!'
+      : `${a.icon} ${a.desc} — ${a.label}`;
+    const alarmTitle = a.fuelAlarm ? '⛽ تنبيه حصة البنزين' : '🔔 تنبيه وجبة';
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(alarmTitle, { body: alarmDesc, icon: '/favicon.ico' });
     }
-
-    if (a.hour === h && a.min === m) {
-      const alarmDesc = a.fuelAlarm
-        ? '⛽ غداً يوم استلام حصة البنزين! تذكر الاستلام.'
-        : `${a.icon} ${a.desc} — ${a.label}`;
-      const alarmTitle = a.fuelAlarm ? '⛽ تنبيه حصة البنزين' : '🔔 تنبيه وجبة';
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(alarmTitle, {
-          body: alarmDesc,
-          icon: '/favicon.ico'
-        });
-      }
-      // Visual + audio fallback
-      showAlarmStatus(`🔔 ${alarmDesc}`);
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-        // Compressor to maximize loudness
-        const compressor = ctx.createDynamicsCompressor();
-        compressor.threshold.value = -6;
-        compressor.knee.value = 0;
-        compressor.ratio.value = 20;
-        compressor.attack.value = 0;
-        compressor.release.value = 0.1;
-        compressor.connect(ctx.destination);
-
-        // Master gain — رفع الصوت للحد الأقصى
-        const master = ctx.createGain();
-        master.gain.value = 2.5;
-        master.connect(compressor);
-
-        // دالة لإنشاء نبضة صوتية واحدة
-        function beep(freq, startTime, duration) {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = 'square'; // موجة مربعة = أعلى وأحدة
-          o.frequency.value = freq;
-          g.gain.setValueAtTime(1.0, startTime);
-          g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-          o.connect(g);
-          g.connect(master);
-          o.start(startTime);
-          o.stop(startTime + duration);
-        }
-
-        const now = ctx.currentTime;
-        if (a.fuelAlarm) {
-          // نمط صوتي مميز لتنبيه البنزين (3 نبضات قوية)
-          for (let i = 0; i < 12; i++) {
-            const t = now + i * 0.3;
-            beep(880, t, 0.2);
-            beep(1320, t + 0.12, 0.15);
-          }
-        } else {
-          // 8 نبضات متكررة بنغمتين متناوبتين (مثل منبه حقيقي)
-          for (let i = 0; i < 8; i++) {
-            const t = now + i * 0.35;
-            beep(1100, t, 0.25);          // نغمة عالية
-            beep(880,  t + 0.18, 0.15);  // نغمة ثانية
-          }
-        }
-      } catch(e) {}
-    }
+    showAlarmStatus(`🔔 ${alarmDesc}`);
+    playAlarmSound(!!a.fuelAlarm);
   });
 }
 
 renderAlarms();
-setInterval(checkAlarms, 10000);
+scheduleNextCheck();
 setInterval(renderAlarms, 30000); // refresh countdowns
 requestNotificationPermission();
+
+function toggleAlarmCombo() {
+  const body  = document.getElementById('alarmComboBody');
+  const arrow = document.getElementById('alarmComboArrow');
+  const open  = body.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+}
 
 // ─── Fuel Calendar Coloring ───────────────────────────────────────────────────
 function fuelShowStatus(msg) {
