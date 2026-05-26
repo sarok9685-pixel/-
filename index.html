@@ -532,6 +532,119 @@
     transition: opacity 0.4s ease;
   }
   .alarm-status.show { opacity: 1; }
+
+  /* ── About pane ── */
+  .about-section {
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .about-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--accent2);
+    text-align: center;
+  }
+  .about-version {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+  .about-desc {
+    font-size: 13px;
+    color: var(--light);
+    opacity: 0.8;
+    text-align: center;
+    line-height: 1.7;
+  }
+  .about-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .about-block-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .about-block-body {
+    font-size: 13px;
+    color: var(--light);
+    opacity: 0.75;
+    line-height: 1.7;
+  }
+  .about-colors {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .about-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--light);
+  }
+  .about-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .about-dot.shift-A { background: #c9a84c; }
+  .about-dot.shift-B { background: #6ca8c9; }
+  .about-dot.shift-C { background: #7ec96a; }
+  .about-dot.shift-D { background: #c96c6c; }
+  .about-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 4px;
+  }
+  .about-dev-block {
+    background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(100,80,180,0.08));
+    border-color: rgba(201,168,76,0.35) !important;
+    text-align: center;
+  }
+  .about-dev-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    opacity: 0.8;
+    margin-bottom: 6px;
+  }
+  .about-dev-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .about-dev-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.4;
+    margin: 0 auto 12px;
+  }
+  .about-dev-row {
+    font-size: 13px;
+    color: var(--light);
+    opacity: 0.85;
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+  .about-phone {
+    color: var(--accent2);
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .about-phone:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -543,6 +656,7 @@
   <div class="tab-switcher">
     <button class="tab-btn active-miladi" id="tabMiladi" onclick="switchTab('miladi')">📅 ميلادي</button>
     <button class="tab-btn" id="tabHijri" onclick="switchTab('hijri')">🌙 هجري</button>
+    <button class="tab-btn" id="tabAbout" onclick="switchTab('about')">ℹ️ حول</button>
   </div>
 
   <!-- SHIFT LEGEND -->
@@ -598,6 +712,43 @@
         <div class="shift-info-label">الوجبة القادمة</div>
         <div class="shift-info-value" id="shiftNext">—</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ABOUT PANE -->
+  <div class="pane" id="paneAbout" style="display:none;">
+    <div class="deco-line"></div>
+    <div class="about-section">
+      <div class="about-title">📅 تقويم الوجبات</div>
+      <div class="about-version">الإصدار 1.0</div>
+      <div class="about-desc">تطبيق لمتابعة جداول الوجبات (المناوبات) بنظام 24/72 ساعة، مع عرض التقويم الميلادي والهجري.</div>
+
+      <div class="about-block about-dev-block">
+        <div class="about-dev-label">إعداد وتصميم</div>
+        <div class="about-dev-name">المهندس محمد محي الدين عمر</div>
+        <div class="about-dev-divider"></div>
+        <div class="about-dev-row">🏢 قسم حماية المنشآت النفطية</div>
+        <div class="about-dev-row">🖥️ شعبة مراقبة الحماية الإلكترونية</div>
+        <div class="about-dev-row">📞 <a class="about-phone" href="tel:07701264441">07701264441</a></div>
+      </div>
+      <div class="about-block">
+        <div class="about-block-title">⏱️ نظام الوجبات</div>
+        <div class="about-block-body">كل وجبة تعمل 24 ساعة ثم ترتاح 72 ساعة، ودورة كاملة = 96 ساعة (4 وجبات × 24 ساعة).</div>
+      </div>
+      <div class="about-block">
+        <div class="about-block-title">🎨 الألوان</div>
+        <div class="about-colors">
+          <div class="about-color-row"><span class="about-dot shift-A"></span><span>وجبة أ</span></div>
+          <div class="about-color-row"><span class="about-dot shift-B"></span><span>وجبة ب</span></div>
+          <div class="about-color-row"><span class="about-dot shift-C"></span><span>وجبة ج</span></div>
+          <div class="about-color-row"><span class="about-dot shift-D"></span><span>وجبة د</span></div>
+        </div>
+      </div>
+      <div class="about-block">
+        <div class="about-block-title">🔔 المنبهات</div>
+        <div class="about-block-body">يمكن تفعيل تنبيهات تلقائية قبل بداية كل وجبة من قسم المنبهات.</div>
+      </div>
+      <div class="about-footer">صُمِّم بعناية لمتابعة جداول العمل بدقة</div>
     </div>
   </div>
 
@@ -719,8 +870,13 @@ function switchTab(tab) {
   activeTab = tab;
   document.getElementById('paneMiladi').classList.toggle('active', tab === 'miladi');
   document.getElementById('paneHijri').classList.toggle('active', tab === 'hijri');
+  document.getElementById('paneAbout').style.display = tab === 'about' ? 'block' : 'none';
   document.getElementById('tabMiladi').className = 'tab-btn' + (tab === 'miladi' ? ' active-miladi' : '');
   document.getElementById('tabHijri').className = 'tab-btn' + (tab === 'hijri' ? ' active-hijri' : '');
+  document.getElementById('tabAbout').className = 'tab-btn' + (tab === 'about' ? ' active-miladi' : '');
+  // Hide legend and alarm when on about tab
+  document.querySelector('.shift-legend').style.display = tab === 'about' ? 'none' : '';
+  document.getElementById('alarmSection').style.display = tab === 'about' ? 'none' : '';
 }
 
 // ─── Miladi render ───────────────────────────────────────────────────────────
