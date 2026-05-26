@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التقويم الميلادي والهجري</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d14;
+    --card: #13131f;
+    --accent: #c9a84c;
+    --accent2: #e8c96e;
+    --hijri: #6ca8c9;
+    --hijri2: #8fc4e0;
+    --light: #f0ead6;
+    --muted: #5a5870;
+    --hover: #1e1d2e;
+    --border: #2a2840;
+    --sunday: #c96c6c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--light);
+    font-family: 'Tajawal', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(100,80,180,0.06) 0%, transparent 50%);
+  }
+
+  .calendar-wrapper {
+    width: 100%;
+    max-width: 560px;
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .calendar-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .calendar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  /* Tab switcher */
+  .tab-switcher {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 4px;
+    margin-bottom: 20px;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 24px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .tab-btn.active-miladi {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .tab-btn.active-hijri {
+    background: var(--hijri);
+    color: var(--bg);
+  }
+
+  .deco-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.3;
+    margin-bottom: 20px;
+  }
+
+  .deco-line.hijri-line {
+    background: linear-gradient(90deg, transparent, var(--hijri), transparent);
+  }
+
+  /* Nav row */
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .nav-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    transform: scale(1.05);
+  }
+
+  .nav-btn.hijri-nav { color: var(--hijri); }
+  .nav-btn.hijri-nav:hover { background: var(--hijri); border-color: var(--hijri); color: var(--bg); }
+
+  .month-display { flex: 1; text-align: center; }
+  .month-name { font-size: 22px; font-weight: 700; color: var(--light); }
+  .year-display { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* Sub-header: shows the corresponding month range in the other calendar */
+  .sub-calendar-info {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    display: inline-block;
+    width: 100%;
+  }
+
+  .sub-calendar-info .sub-highlight { color: var(--accent2); }
+  .sub-calendar-info.hijri-info .sub-highlight { color: var(--hijri2); }
+
+  /* Grid */
+  .calendar-grid {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .day-names {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: rgba(201,168,76,0.06);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .day-names.hijri-names { background: rgba(108,168,201,0.06); }
+
+  .day-name {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+
+  .day-name:first-child { color: var(--sunday); }
+
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 6px;
+    gap: 3px;
+  }
+
+  .day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    color: var(--light);
+    gap: 1px;
+    overflow: hidden;
+  }
+
+  .day-miladi { font-size: 13px; font-weight: 500; line-height: 1; }
+  .day-hijri-sub { font-size: 9px; color: var(--hijri); opacity: 0.75; line-height: 1; }
+
+  .day-cell:hover:not(.empty):not(.today) {
+    background: var(--hover);
+    color: var(--accent2);
+  }
+  .day-cell:hover:not(.empty):not(.today) .day-hijri-sub { opacity: 1; }
+
+  .day-cell.empty { cursor: default; }
+
+  .day-cell.today {
+    background: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
+  .day-cell.today .day-miladi { color: var(--bg); }
+  .day-cell.today .day-hijri-sub { color: rgba(13,13,20,0.7); opacity: 1; }
+
+  .day-cell.selected:not(.today) {
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.4);
+  }
+  .day-cell.selected:not(.today) .day-miladi { color: var(--accent2); }
+
+  .day-cell.sunday:not(.today) .day-miladi { color: var(--sunday); opacity: 0.85; }
+  .day-cell.other-month { opacity: 0.3; }
+
+  /* Hijri grid cells */
+  .day-cell-h { font-size: 13px; font-weight: 500; color: var(--light); }
+  .day-miladi-sub { font-size: 9px; color: var(--accent); opacity: 0.7; }
+
+  .day-cell.today-hijri {
+    background: var(--hijri);
+    box-shadow: 0 0 20px rgba(108,168,201,0.3);
+  }
+  .day-cell.today-hijri .day-cell-h { color: var(--bg); font-weight: 700; }
+  .day-cell.today-hijri .day-miladi-sub { color: rgba(13,13,20,0.7); opacity: 1; }
+  .day-cell.selected-hijri:not(.today-hijri) {
+    background: rgba(108,168,201,0.12);
+    border: 1px solid rgba(108,168,201,0.4);
+  }
+  .day-cell.selected-hijri:not(.today-hijri) .day-cell-h { color: var(--hijri2); }
+  .day-cell:hover:not(.empty):not(.today-hijri) .day-miladi-sub { opacity: 1; }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: rgba(201,168,76,0.03);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .footer.hijri-footer { background: rgba(108,168,201,0.03); }
+
+  .today-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 5px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .today-btn:hover { background: var(--accent); color: var(--bg); }
+  .today-btn.hijri-today-btn { border-color: var(--hijri); color: var(--hijri); }
+  .today-btn.hijri-today-btn:hover { background: var(--hijri); color: var(--bg); }
+
+  .selected-date { font-size: 11px; color: var(--accent2); font-weight: 500; }
+  .selected-date.hijri-sel { color: var(--hijri2); }
+
+  /* Special days badge */
+  .special-dot {
+    width: 4px; height: 4px;
+    background: var(--hijri2);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 4px;
+  }
+
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  /* ─── Shift Legend ─────────────────────────────────────── */
+  .shift-legend {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .shift-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .shift-badge:hover { transform: scale(1.06); }
+  .shift-badge.inactive {
+    opacity: 0.22;
+    filter: grayscale(0.8);
+  }
+  .shift-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── Badge colors (legend only) ── */
+  .shift-badge.shift-A { background: rgba(201,100,100,0.15); border-color: rgba(201,100,100,0.4); color: #e87a7a; }
+  .shift-badge.shift-A .shift-dot { background: #e87a7a; }
+  .shift-badge.shift-B { background: rgba(100,180,120,0.15); border-color: rgba(100,180,120,0.4); color: #6db87a; }
+  .shift-badge.shift-B .shift-dot { background: #6db87a; }
+  .shift-badge.shift-C { background: rgba(120,150,220,0.15); border-color: rgba(120,150,220,0.4); color: #8fa4e8; }
+  .shift-badge.shift-C .shift-dot { background: #8fa4e8; }
+  .shift-badge.shift-D { background: rgba(200,150,80,0.15); border-color: rgba(200,150,80,0.4); color: #e0a84a; }
+  .shift-badge.shift-D .shift-dot { background: #e0a84a; }
+
+  /* ── Shift dot inside day cells ── */
+  .shift-indicator {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transition: opacity 0.2s ease;
+  }
+  .shift-indicator.A { background: #e87a7a; }
+  .shift-indicator.B { background: #6db87a; }
+  .shift-indicator.C { background: #8fa4e8; }
+  .shift-indicator.D { background: #e0a84a; }
+  .day-cell.today .shift-indicator { opacity: 0.7; }
+
+  /* ── Shift label inside day cells ── */
+  .shift-label {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    opacity: 0;
+    line-height: 1;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  #daysGrid.shift-filter-active .day-cell.shift-match .shift-label { opacity: 0.9; }
+  .shift-label.A { color: #e87a7a; }
+  .shift-label.B { color: #6db87a; }
+  .shift-label.C { color: #8fa4e8; }
+  .shift-label.D { color: #e0a84a; }
+
+  /* ── Non-matching cells: keep numbers, hide dot & background ── */
+  .day-cell.shift-hidden {
+    transition: all 0.2s ease;
+  }
+  .day-cell.shift-hidden .shift-indicator { opacity: 0; }
+  .day-cell.shift-hidden .day-miladi,
+  .day-cell.shift-hidden .day-hijri-sub { opacity: 0.3; }
+  .day-cell.shift-hidden .shift-label { opacity: 0 !important; }
+
+  /* ── Matching cells: colored background + colored number ── */
+  #daysGrid.shift-filter-active .day-cell.shift-match:not(.today) {
+    border-radius: 10px;
+    transition: all 0.2s ease;
+  }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-A:not(.today) {
+    background: rgba(232,122,122,0.22);
+    border: 1px solid rgba(232,122,122,0.5);
+  }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-B:not(.today) {
+    background: rgba(109,184,122,0.22);
+    border: 1px solid rgba(109,184,122,0.5);
+  }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-C:not(.today) {
+    background: rgba(143,164,232,0.22);
+    border: 1px solid rgba(143,164,232,0.5);
+  }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-D:not(.today) {
+    background: rgba(224,168,74,0.22);
+    border: 1px solid rgba(224,168,74,0.5);
+  }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-A:not(.today) .day-miladi { color: #e87a7a; opacity: 1; }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-B:not(.today) .day-miladi { color: #6db87a; opacity: 1; }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-C:not(.today) .day-miladi { color: #8fa4e8; opacity: 1; }
+  #daysGrid.shift-filter-active .day-cell.shift-match.shift-D:not(.today) .day-miladi { color: #e0a84a; opacity: 1; }
+
+  .day-cell:not(.empty) { transition: all 0.2s ease; }
+
+  /* Shift info panel */
+  .shift-info-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .shift-info-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); opacity: 0.6; }
+  .shift-info-value { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .shift-info-block { text-align: center; }
+
+  /* ─── Alarm Section ──────────────────────────────── */
+  .alarm-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 14px;
+  }
+  .alarm-title {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0.6;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .alarm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .alarm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+  }
+  .alarm-item.active-alarm {
+    border-color: rgba(201,168,76,0.5);
+    background: rgba(201,168,76,0.07);
+  }
+  .alarm-item-info { display: flex; align-items: center; gap: 10px; }
+  .alarm-time {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--light);
+    font-family: 'Playfair Display', serif;
+    min-width: 52px;
+    letter-spacing: 1px;
+  }
+  .alarm-time.active-alarm { color: var(--accent2); }
+  .alarm-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .alarm-toggle {
+    width: 42px;
+    height: 22px;
+    border-radius: 11px;
+    background: var(--border);
+    position: relative;
+    cursor: pointer;
+    border: none;
+    transition: background 0.25s ease;
+    flex-shrink: 0;
+  }
+  .alarm-toggle.on { background: var(--accent); }
+  .alarm-toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: left 0.25s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .alarm-toggle.on::after { left: 23px; }
+  .alarm-set-all {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .alarm-set-all:hover { background: var(--accent); color: var(--bg); }
+  .alarm-status {
+    text-align: center;
+    font-size: 11px;
+    color: var(--accent2);
+    margin-top: 8px;
+    min-height: 16px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .alarm-status.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="calendar-wrapper">
+  <div class="calendar-header">
+    <div class="calendar-title">التقويم الميلادي والهجري</div>
+  </div>
+
+  <div class="tab-switcher">
+    <button class="tab-btn active-miladi" id="tabMiladi" onclick="switchTab('miladi')">📅 ميلادي</button>
+    <button class="tab-btn" id="tabHijri" onclick="switchTab('hijri')">🌙 هجري</button>
+  </div>
+
+  <!-- SHIFT LEGEND -->
+  <div class="shift-legend">
+    <div class="shift-badge shift-A" id="badge-A" onclick="toggleShiftFilter('A')"><div class="shift-dot"></div>وجبة أ</div>
+    <div class="shift-badge shift-B" id="badge-B" onclick="toggleShiftFilter('B')"><div class="shift-dot"></div>وجبة ب</div>
+    <div class="shift-badge shift-C" id="badge-C" onclick="toggleShiftFilter('C')"><div class="shift-dot"></div>وجبة ج</div>
+    <div class="shift-badge shift-D" id="badge-D" onclick="toggleShiftFilter('D')"><div class="shift-dot"></div>وجبة د</div>
+  </div>
+
+  <!-- MILADI PANE -->
+  <div class="pane active" id="paneMiladi">
+    <div class="deco-line"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">‹</button>
+      <div class="month-display">
+        <div class="month-name" id="monthName"></div>
+        <div class="year-display" id="yearDisplay"></div>
+      </div>
+      <button class="nav-btn" id="nextBtn" onclick="navigate(1)">›</button>
+    </div>
+    <div class="sub-calendar-info" id="miladiSubInfo"></div>
+    <div class="calendar-grid">
+      <div class="day-names">
+        <div class="day-name">أحد</div>
+        <div class="day-name">إثن</div>
+        <div class="day-name">ثلث</div>
+        <div class="day-name">أرب</div>
+        <div class="day-name">خمس</div>
+        <div class="day-name">جمع</div>
+        <div class="day-name">سبت</div>
+      </div>
+      <div class="days-grid" id="daysGrid"></div>
+      <div class="footer">
+        <button class="today-btn" onclick="goToday()">اليوم</button>
+        <div class="selected-date" id="selectedDate"></div>
+      </div>
+    </div>
+    <div class="shift-info-panel" id="shiftInfoPanel">
+      <div class="shift-info-block">
+        <div class="shift-info-label">الوجبة الآن</div>
+        <div class="shift-info-value" id="shiftNow">—</div>
+      </div>
+      <div class="shift-info-block">
+        <div class="shift-info-label">بداية الوجبة</div>
+        <div class="shift-info-value" id="shiftStart">—</div>
+      </div>
+      <div class="shift-info-block">
+        <div class="shift-info-label">نهاية الوجبة</div>
+        <div class="shift-info-value" id="shiftEnd">—</div>
+      </div>
+      <div class="shift-info-block">
+        <div class="shift-info-label">الوجبة القادمة</div>
+        <div class="shift-info-value" id="shiftNext">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALARM SECTION -->
+  <div class="alarm-section" id="alarmSection">
+    <div class="alarm-title">🔔 منبهات الوجبات</div>
+    <div class="alarm-list" id="alarmList"></div>
+    <button class="alarm-set-all" onclick="setAllAlarms()">تفعيل جميع المنبهات</button>
+    <div class="alarm-status" id="alarmStatus"></div>
+  </div>
+
+  <!-- HIJRI PANE -->
+  <div class="pane" id="paneHijri">
+    <div class="deco-line hijri-line"></div>
+    <div class="nav-row">
+      <button class="nav-btn hijri-nav" onclick="navigateH(-1)">‹</button>
+      <div class="month-display">
+        <div class="month-name" id="hijriMonthName"></div>
+        <div class="year-display" id="hijriYearDisplay"></div>
+      </div>
+      <button class="nav-btn hijri-nav" onclick="navigateH(1)">›</button>
+    </div>
+    <div class="sub-calendar-info hijri-info" id="hijriSubInfo"></div>
+    <div class="calendar-grid">
+      <div class="day-names hijri-names">
+        <div class="day-name">أحد</div>
+        <div class="day-name">إثن</div>
+        <div class="day-name">ثلث</div>
+        <div class="day-name">أرب</div>
+        <div class="day-name">خمس</div>
+        <div class="day-name">جمع</div>
+        <div class="day-name">سبت</div>
+      </div>
+      <div class="days-grid" id="hijriDaysGrid"></div>
+      <div class="footer hijri-footer">
+        <button class="today-btn hijri-today-btn" onclick="goTodayHijri()">اليوم</button>
+        <div class="selected-date hijri-sel" id="hijriSelectedDate"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Gregorian months / days ───────────────────────────────────────────────
+const miladiMonths = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const hijriMonths = ['محرم','صفر','ربيع الأول','ربيع الثاني','جمادى الأولى','جمادى الثانية','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
+
+// ─── Special Hijri days ─────────────────────────────────────────────────────
+const specialHijri = {
+  '1-1': 'رأس السنة الهجرية',
+  '10-1': 'يوم عاشوراء',
+  '12-3': 'المولد النبوي الشريف',
+  '27-7': 'ليلة المعراج',
+  '15-8': 'ليلة النصف من شعبان',
+  '1-9': 'أول رمضان',
+  '27-9': 'ليلة القدر',
+  '1-10': 'عيد الفطر',
+  '9-12': 'يوم عرفة',
+  '10-12': 'عيد الأضحى'
+};
+
+// ─── Hijri Conversion (Umm al-Qura algorithmic approximation) ──────────────
+function gregorianToHijri(gYear, gMonth, gDay) {
+  // Julian Day Number
+  const a = Math.floor((14 - gMonth) / 12);
+  const y = gYear + 4800 - a;
+  const m = gMonth + 12 * a - 3;
+  let jdn = gDay + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+
+  // Convert JDN to Hijri
+  const l = jdn - 1948440 + 10632;
+  const n = Math.floor((l - 1) / 10631);
+  const l2 = l - 10631 * n + 354;
+  const j = Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) + Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
+  const l3 = l2 - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+  const hMonth = Math.floor((24 * l3) / 709);
+  const hDay = l3 - Math.floor((709 * hMonth) / 24);
+  const hYear = 30 * n + j - 30;
+  return { hYear, hMonth, hDay };
+}
+
+function hijriToGregorian(hYear, hMonth, hDay) {
+  const n = hDay + Math.ceil(29.5001 * (hMonth - 1)) + (hYear - 1) * 354 + Math.floor((3 + 11 * hYear) / 30) + 1948440 - 385;
+  // JDN to Gregorian
+  let l = n + 68569;
+  const q = Math.floor(4 * l / 146097);
+  l = l - Math.floor((146097 * q + 3) / 4);
+  let i = Math.floor(4000 * (l + 1) / 1461001);
+  l = l - Math.floor(1461 * i / 4) + 31;
+  let j = Math.floor(80 * l / 2447);
+  const gDay = l - Math.floor(2447 * j / 80);
+  l = Math.floor(j / 11);
+  const gMonth = j + 2 - 12 * l;
+  const gYear = 100 * (q - 49) + i + l;
+  return new Date(gYear, gMonth - 1, gDay);
+}
+
+function daysInHijriMonth(hYear, hMonth) {
+  const start = hijriToGregorian(hYear, hMonth, 1);
+  let nextM = hMonth + 1, nextY = hYear;
+  if (nextM > 12) { nextM = 1; nextY++; }
+  const end = hijriToGregorian(nextY, nextM, 1);
+  return Math.round((end - start) / 86400000);
+}
+
+// ─── State ──────────────────────────────────────────────────────────────────
+const now = new Date();
+let current = { month: now.getMonth(), year: now.getFullYear() };
+let selectedM = null;
+let activeTab = 'miladi';
+
+const todayH = gregorianToHijri(now.getFullYear(), now.getMonth() + 1, now.getDate());
+let currentH = { month: todayH.hMonth, year: todayH.hYear };
+let selectedH = null;
+
+// ─── Tab switch ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('paneMiladi').classList.toggle('active', tab === 'miladi');
+  document.getElementById('paneHijri').classList.toggle('active', tab === 'hijri');
+  document.getElementById('tabMiladi').className = 'tab-btn' + (tab === 'miladi' ? ' active-miladi' : '');
+  document.getElementById('tabHijri').className = 'tab-btn' + (tab === 'hijri' ? ' active-hijri' : '');
+}
+
+// ─── Miladi render ───────────────────────────────────────────────────────────
+function renderMiladi() {
+  document.getElementById('monthName').textContent = miladiMonths[current.month];
+  document.getElementById('yearDisplay').textContent = current.year;
+
+  // Sub-info: show Hijri range for this Gregorian month
+  const firstH = gregorianToHijri(current.year, current.month + 1, 1);
+  const daysInM = new Date(current.year, current.month + 1, 0).getDate();
+  const lastH  = gregorianToHijri(current.year, current.month + 1, daysInM);
+  const subText = firstH.hMonth === lastH.hMonth
+    ? `<span class="sub-highlight">${hijriMonths[firstH.hMonth-1]} ${firstH.hYear} هـ</span>`
+    : `<span class="sub-highlight">${hijriMonths[firstH.hMonth-1]} — ${hijriMonths[lastH.hMonth-1]} ${lastH.hYear} هـ</span>`;
+  document.getElementById('miladiSubInfo').innerHTML = `يوافق هجرياً: ${subText}`;
+
+  const grid = document.getElementById('daysGrid');
+  grid.innerHTML = '';
+
+  const firstDay = new Date(current.year, current.month, 1).getDay();
+  const daysInPrev = new Date(current.year, current.month, 0).getDate();
+
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const cell = makeCell();
+    cell.classList.add('other-month','empty');
+    cell.querySelector('.day-miladi').textContent = daysInPrev - i;
+    grid.appendChild(cell);
+  }
+
+  for (let d = 1; d <= daysInM; d++) {
+    const cell = makeCell();
+    const dateObj = new Date(current.year, current.month, d);
+    const dow = dateObj.getDay();
+    const h = gregorianToHijri(current.year, current.month + 1, d);
+
+    cell.querySelector('.day-miladi').textContent = d;
+    cell.querySelector('.day-hijri-sub').textContent = h.hDay;
+
+    if (dow === 0) cell.classList.add('sunday');
+    if (current.year === now.getFullYear() && current.month === now.getMonth() && d === now.getDate())
+      cell.classList.add('today');
+    if (selectedM && selectedM.d === d && selectedM.m === current.month && selectedM.y === current.year)
+      cell.classList.add('selected');
+
+    // Special hijri dot
+    const key = `${h.hDay}-${h.hMonth}`;
+    if (specialHijri[key]) {
+      const dot = document.createElement('div');
+      dot.className = 'special-dot';
+      dot.title = specialHijri[key];
+      cell.appendChild(dot);
+    }
+
+    cell.addEventListener('click', () => {
+      selectedM = { d, m: current.month, y: current.year };
+      const hd = gregorianToHijri(current.year, current.month + 1, d);
+      document.getElementById('selectedDate').textContent =
+        `${dayNames[dow]}، ${d} ${miladiMonths[current.month]} | ${hd.hDay} ${hijriMonths[hd.hMonth-1]} ${hd.hYear}هـ`;
+      renderMiladi();
+    });
+    grid.appendChild(cell);
+  }
+
+  const remaining = 42 - grid.children.length;
+  for (let d = 1; d <= remaining; d++) {
+    const cell = makeCell();
+    cell.classList.add('other-month','empty');
+    cell.querySelector('.day-miladi').textContent = d;
+    grid.appendChild(cell);
+  }
+}
+
+function makeCell() {
+  const cell = document.createElement('div');
+  cell.className = 'day-cell';
+  const top = document.createElement('div'); top.className = 'day-miladi';
+  const bot = document.createElement('div'); bot.className = 'day-hijri-sub';
+  cell.appendChild(top); cell.appendChild(bot);
+  return cell;
+}
+
+// ─── Hijri render ────────────────────────────────────────────────────────────
+function renderHijri() {
+  document.getElementById('hijriMonthName').textContent = hijriMonths[currentH.month - 1];
+  document.getElementById('hijriYearDisplay').textContent = currentH.year + ' هـ';
+
+  // Sub-info: Gregorian range
+  const gStart = hijriToGregorian(currentH.year, currentH.month, 1);
+  const dim = daysInHijriMonth(currentH.year, currentH.month);
+  const gEnd = hijriToGregorian(currentH.year, currentH.month, dim);
+  const gRange = gStart.getMonth() === gEnd.getMonth()
+    ? `<span class="sub-highlight">${miladiMonths[gStart.getMonth()]} ${gStart.getFullYear()}</span>`
+    : `<span class="sub-highlight">${miladiMonths[gStart.getMonth()]} — ${miladiMonths[gEnd.getMonth()]} ${gEnd.getFullYear()}</span>`;
+  document.getElementById('hijriSubInfo').innerHTML = `يوافق ميلادياً: ${gRange}`;
+
+  const grid = document.getElementById('hijriDaysGrid');
+  grid.innerHTML = '';
+
+  const firstGDay = hijriToGregorian(currentH.year, currentH.month, 1);
+  const startDow = firstGDay.getDay();
+
+  // Blank cells
+  for (let i = 0; i < startDow; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell empty other-month';
+    grid.appendChild(cell);
+  }
+
+  for (let d = 1; d <= dim; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    const gDate = hijriToGregorian(currentH.year, currentH.month, d);
+    const dow = gDate.getDay();
+
+    const top = document.createElement('div'); top.className = 'day-cell-h'; top.textContent = d;
+    const bot = document.createElement('div'); bot.className = 'day-miladi-sub';
+    bot.textContent = gDate.getDate();
+    cell.appendChild(top); cell.appendChild(bot);
+
+    if (dow === 0) cell.classList.add('sunday');
+    if (currentH.year === todayH.hYear && currentH.month === todayH.hMonth && d === todayH.hDay)
+      cell.classList.add('today-hijri');
+    if (selectedH && selectedH.d === d && selectedH.m === currentH.month && selectedH.y === currentH.year)
+      cell.classList.add('selected-hijri');
+
+    // Special day dot
+    const key = `${d}-${currentH.month}`;
+    if (specialHijri[key]) {
+      const dot = document.createElement('div');
+      dot.className = 'special-dot';
+      dot.title = specialHijri[key];
+      cell.appendChild(dot);
+    }
+
+    cell.addEventListener('click', () => {
+      selectedH = { d, m: currentH.month, y: currentH.year };
+      const gd = hijriToGregorian(currentH.year, currentH.month, d);
+      const special = specialHijri[key] ? ` • ${specialHijri[key]}` : '';
+      document.getElementById('hijriSelectedDate').textContent =
+        `${d} ${hijriMonths[currentH.month-1]} ${currentH.year}هـ | ${gd.getDate()} ${miladiMonths[gd.getMonth()]}${special}`;
+      renderHijri();
+    });
+    grid.appendChild(cell);
+  }
+
+  const rem = 42 - grid.children.length;
+  for (let d = 1; d <= rem; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell empty other-month';
+    const t = document.createElement('div'); t.className = 'day-cell-h'; t.textContent = d;
+    cell.appendChild(t);
+    grid.appendChild(cell);
+  }
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+function navigate(dir) {
+  current.month += dir;
+  if (current.month < 0) { current.month = 11; current.year--; }
+  if (current.month > 11) { current.month = 0; current.year++; }
+  renderMiladi();
+}
+
+function navigateH(dir) {
+  currentH.month += dir;
+  if (currentH.month < 1) { currentH.month = 12; currentH.year--; }
+  if (currentH.month > 12) { currentH.month = 1; currentH.year++; }
+  renderHijri();
+}
+
+function goToday() {
+  current = { month: now.getMonth(), year: now.getFullYear() };
+  selectedM = null;
+  document.getElementById('selectedDate').textContent = '';
+  renderMiladi();
+}
+
+function goTodayHijri() {
+  currentH = { month: todayH.hMonth, year: todayH.hYear };
+  selectedH = null;
+  document.getElementById('hijriSelectedDate').textContent = '';
+  renderHijri();
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+renderMiladi();
+renderHijri();
+
+// ─── 24/72 Shift System ──────────────────────────────────────────────────────
+// Anchor: وجبة أ starts 2026-05-26 at 07:00 local time
+// Each person works 24h, then rests 72h → cycle = 96h (4 persons × 24h)
+const SHIFT_LABELS = ['أ', 'ب', 'ج', 'د'];
+const SHIFT_CLASSES = ['A', 'B', 'C', 'D'];
+const SHIFT_COLORS  = ['#e87a7a', '#6db87a', '#8fa4e8', '#e0a84a'];
+
+// Anchor time: 2026-05-26 07:00:00 local
+const ANCHOR = new Date(2026, 4, 26, 7, 0, 0); // month is 0-indexed
+const CYCLE_MS = 4 * 24 * 60 * 60 * 1000; // 96 hours
+
+/**
+ * Given any Date, return which shift (0=أ,1=ب,2=ج,3=د) is on duty,
+ * plus the exact start/end times of that duty period.
+ */
+function getShiftAtTime(date) {
+  const diff = date - ANCHOR;
+  // Which slot in the cycle? Each slot is 24h
+  const slotMs = 24 * 60 * 60 * 1000;
+  // Normalise diff into cycle
+  const cyclePos = ((diff % CYCLE_MS) + CYCLE_MS) % CYCLE_MS;
+  const slotIndex = Math.floor(cyclePos / slotMs); // 0,1,2,3
+  // Full cycle number
+  const cycleNum = Math.floor((diff - cyclePos + (cyclePos >= 0 ? 0 : CYCLE_MS)) / CYCLE_MS);
+  const cycleStart = new Date(ANCHOR.getTime() + Math.floor((diff) / CYCLE_MS) * CYCLE_MS);
+  // Correct cycleStart
+  const cs = new Date(ANCHOR.getTime() + (Math.floor((date - ANCHOR) / CYCLE_MS)) * CYCLE_MS);
+  const shiftStart = new Date(cs.getTime() + slotIndex * slotMs);
+  const shiftEnd   = new Date(shiftStart.getTime() + slotMs);
+  return { index: slotIndex, start: shiftStart, end: shiftEnd };
+}
+
+/**
+ * Which shift is on duty for a given calendar day (date at 00:00)?
+ * Returns array of shift indices that appear during that day.
+ */
+function getShiftsForDay(year, month, day) {
+  const dayStart = new Date(year, month, day, 0, 0, 0);
+  const dayEnd   = new Date(year, month, day, 23, 59, 59);
+  const shifts = new Set();
+  // Check at start, 7am, and end of day
+  [dayStart, new Date(year, month, day, 7, 0), new Date(year, month, day, 12), dayEnd].forEach(t => {
+    shifts.add(getShiftAtTime(t).index);
+  });
+  return [...shifts];
+}
+
+/**
+ * Primary shift for a day = the one that starts at 07:00 that day,
+ * OR the one covering 07:00 if no new one starts then.
+ */
+function getPrimaryShiftForDay(year, month, day) {
+  const t7 = new Date(year, month, day, 7, 0, 0);
+  return getShiftAtTime(t7);
+}
+
+// Format time as "dd MMM hh:mm ص/م"
+function fmtTime(d) {
+  const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const months2 = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? 'م' : 'ص';
+  if (h === 0) h = 12;
+  else if (h > 12) h -= 12;
+  const mm = String(m).padStart(2,'0');
+  return `${d.getDate()} ${months2[d.getMonth()]} ${h}:${mm}${ampm}`;
+}
+
+// Update the shift info panel for "now"
+function updateShiftPanel() {
+  const now2 = new Date();
+  const s = getShiftAtTime(now2);
+  const nextIndex = (s.index + 1) % 4;
+  document.getElementById('shiftNow').textContent   = `وجبة ${SHIFT_LABELS[s.index]}`;
+  document.getElementById('shiftNow').style.color   = SHIFT_COLORS[s.index];
+  document.getElementById('shiftStart').textContent = fmtTime(s.start);
+  document.getElementById('shiftEnd').textContent   = fmtTime(s.end);
+  document.getElementById('shiftNext').textContent  = `وجبة ${SHIFT_LABELS[nextIndex]}`;
+  document.getElementById('shiftNext').style.color  = SHIFT_COLORS[nextIndex];
+}
+
+updateShiftPanel();
+// Refresh every minute
+setInterval(updateShiftPanel, 60000);
+
+// ─── Shift Filter ────────────────────────────────────────────────────────────
+let activeShiftFilter = null; // null = show all, 'A'/'B'/'C'/'D' = filter
+
+function toggleShiftFilter(cls) {
+  activeShiftFilter = (activeShiftFilter === cls) ? null : cls;
+  applyShiftFilter();
+}
+
+function applyShiftFilter() {
+  const ALL = ['A','B','C','D'];
+  const grid = document.getElementById('daysGrid');
+  if (!grid) return;
+
+  grid.classList.toggle('shift-filter-active', activeShiftFilter !== null);
+
+  // Update badge styles
+  ALL.forEach(c => {
+    const badge = document.getElementById('badge-' + c);
+    if (!badge) return;
+    badge.classList.toggle('inactive', activeShiftFilter !== null && activeShiftFilter !== c);
+  });
+
+  // Style each day cell
+  grid.querySelectorAll('.day-cell:not(.empty)').forEach(cell => {
+    const ind = cell.querySelector('.shift-indicator');
+    if (!ind) return;
+    const cellShift = ALL.find(c => ind.classList.contains(c)) || null;
+
+    // Remove previous state classes
+    cell.classList.remove('shift-hidden', 'shift-match');
+    ALL.forEach(c => cell.classList.remove('shift-' + c));
+
+    if (activeShiftFilter === null) return; // no filter, all normal
+
+    if (cellShift === activeShiftFilter) {
+      // Matching: highlight with shift color
+      cell.classList.add('shift-match', 'shift-' + cellShift);
+    } else {
+      // Non-matching: keep numbers, fade shift color
+      cell.classList.add('shift-hidden');
+    }
+  });
+}
+
+// ─── Add shift indicators + label to every day cell ──────────────────────────
+function addShiftIndicators() {
+  const grid = document.getElementById('daysGrid');
+  if (!grid) return;
+  grid.querySelectorAll('.day-cell:not(.empty)').forEach(cell => {
+    const dayNum = parseInt(cell.querySelector('.day-miladi').textContent);
+    if (!dayNum || isNaN(dayNum)) return;
+    const shift = getPrimaryShiftForDay(current.year, current.month, dayNum);
+    const cls = SHIFT_CLASSES[shift.index];
+    const label = `وجبة ${SHIFT_LABELS[shift.index]}`;
+
+    // Remove old elements and old shift classes from cell
+    cell.querySelector('.shift-indicator')?.remove();
+    cell.querySelector('.shift-label')?.remove();
+    ['A','B','C','D'].forEach(c => cell.classList.remove('cell-shift-' + c));
+
+    // Store shift class on the cell itself for CSS/JS targeting
+    cell.classList.add('cell-shift-' + cls);
+    cell.dataset.shift = cls;
+
+    // Dot
+    const dot = document.createElement('div');
+    dot.className = `shift-indicator ${cls}`;
+    dot.title = label;
+    cell.appendChild(dot);
+
+    // Text label
+    const lbl = document.createElement('div');
+    lbl.className = `shift-label ${cls}`;
+    lbl.textContent = label;
+    cell.appendChild(lbl);
+  });
+  applyShiftFilter();
+}
+
+// ─── Patch renderMiladi to run addShiftIndicators after each render ───────────
+const _origRenderMiladi = renderMiladi;
+window.renderMiladi = function() {
+  _origRenderMiladi();
+  addShiftIndicators();
+};
+
+// ─── Alarm System ────────────────────────────────────────────────────────────
+const ALARMS = [
+  { id: 'alarm-07',   hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بداية الوجبة الصباحية',    icon: '🌅' },
+  { id: 'alarm-13',   hour: 13, min: 0,  label: '١٣:٠٠', desc: 'وجبة الظهر',               icon: '☀️' },
+  { id: 'alarm-18',   hour: 18, min: 0,  label: '١٨:٠٠', desc: 'وجبة المساء',              icon: '🌆' },
+  { id: 'alarm-23',   hour: 23, min: 0,  label: '٢٣:٠٠', desc: 'وجبة الليل',              icon: '🌙' },
+  { id: 'alarm-07n',  hour: 7,  min: 0,  label: '٠٧:٠٠', desc: 'بداية وجبة اليوم التالي', icon: '🌄', nextDay: true },
+];
+
+// Load saved states from localStorage
+const alarmStates = {};
+ALARMS.forEach(a => {
+  const saved = localStorage.getItem('alarmState_' + a.id);
+  alarmStates[a.id] = saved !== null ? saved === 'true' : false;
+});
+
+function renderAlarms() {
+  const list = document.getElementById('alarmList');
+  list.innerHTML = '';
+  const now3 = new Date();
+  ALARMS.forEach(a => {
+    const item = document.createElement('div');
+    item.className = 'alarm-item' + (alarmStates[a.id] ? ' active-alarm' : '');
+    item.id = 'item-' + a.id;
+
+    // Check if this alarm is "next" (upcoming today)
+    const alarmToday = new Date();
+    alarmToday.setHours(a.hour, a.min, 0, 0);
+    if (a.nextDay) alarmToday.setDate(alarmToday.getDate() + 1);
+    const msLeft = alarmToday - now3;
+    const upcoming = msLeft > 0 && msLeft < 3 * 60 * 60 * 1000 && alarmStates[a.id];
+    const timeUntil = msLeft > 0 ? formatCountdown(msLeft) : '';
+
+    item.innerHTML = `
+      <div class="alarm-item-info">
+        <span style="font-size:16px">${a.icon}</span>
+        <div>
+          <div class="alarm-time${alarmStates[a.id] ? ' active-alarm' : ''}">${a.label}</div>
+          <div class="alarm-desc">${a.desc}${upcoming ? ` <span style="color:var(--accent2)">• بعد ${timeUntil}</span>` : ''}</div>
+        </div>
+      </div>
+      <button class="alarm-toggle${alarmStates[a.id] ? ' on' : ''}" 
+              onclick="toggleAlarm('${a.id}')" 
+              title="${alarmStates[a.id] ? 'إيقاف المنبه' : 'تفعيل المنبه'}">
+      </button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function formatCountdown(ms) {
+  const totalMins = Math.floor(ms / 60000);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0) return `${h} س ${m} د`;
+  return `${m} د`;
+}
+
+function toggleAlarm(id) {
+  alarmStates[id] = !alarmStates[id];
+  localStorage.setItem('alarmState_' + id, alarmStates[id]);
+  renderAlarms();
+  const alarm = ALARMS.find(a => a.id === id);
+  if (alarm) {
+    showAlarmStatus(alarmStates[id]
+      ? `✅ تم تفعيل منبه ${alarm.label}`
+      : `🔕 تم إيقاف منبه ${alarm.label}`
+    );
+  }
+}
+
+function setAllAlarms() {
+  ALARMS.forEach(a => {
+    alarmStates[a.id] = true;
+    localStorage.setItem('alarmState_' + a.id, 'true');
+  });
+  renderAlarms();
+  showAlarmStatus('✅ تم تفعيل جميع المنبهات الخمسة');
+  requestNotificationPermission();
+}
+
+function showAlarmStatus(msg) {
+  const el = document.getElementById('alarmStatus');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') showAlarmStatus('🔔 تم السماح بالإشعارات!');
+    });
+  }
+}
+
+// Check alarms every 30 seconds and fire notifications
+function checkAlarms() {
+  const now4 = new Date();
+  const h = now4.getHours(), m = now4.getMinutes(), s = now4.getSeconds();
+  if (s > 30) return; // Only fire in first 30s of the minute
+  ALARMS.forEach(a => {
+    if (!alarmStates[a.id]) return;
+    if (a.hour === h && a.min === m) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`🔔 تنبيه وجبة`, {
+          body: `${a.icon} ${a.desc} — ${a.label}`,
+          icon: '/favicon.ico'
+        });
+      }
+      // Visual + audio fallback
+      showAlarmStatus(`🔔 ${a.icon} ${a.desc}!`);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 200, 400].forEach(delay => {
+          setTimeout(() => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.frequency.value = 880;
+            g.gain.setValueAtTime(0.3, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            o.start(ctx.currentTime);
+            o.stop(ctx.currentTime + 0.4);
+          }, delay);
+        });
+      } catch(e) {}
+    }
+  });
+}
+
+renderAlarms();
+setInterval(checkAlarms, 10000);
+setInterval(renderAlarms, 30000); // refresh countdowns
+requestNotificationPermission();
+
+// Apply shift colors on first load (all functions now defined)
+addShiftIndicators();
+
+</script>
+</body>
+</html>
