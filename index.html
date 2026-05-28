@@ -234,10 +234,10 @@
   .day-cell.today .day-hijri-sub { color: rgba(13,13,20,0.7); opacity: 1; }
 
   .day-cell.selected:not(.today) {
-    background: rgba(201,168,76,0.12);
-    border: 1px solid rgba(201,168,76,0.4);
+    background: rgba(140,90,30,0.35);
+    border: 1px solid rgba(180,120,40,0.7);
   }
-  .day-cell.selected:not(.today) .day-miladi { color: var(--accent2); }
+  .day-cell.selected:not(.today) .day-miladi { color: #cd7f32; }
 
   .day-cell.sunday:not(.today) .day-miladi { color: var(--sunday); opacity: 0.85; }
   .day-cell.other-month { opacity: 0.3; }
@@ -994,6 +994,49 @@
   .day-cell.fuel-period-2:not(.today) .day-miladi { color: #8fa4e8 !important; }
   .day-cell.fuel-period-3:not(.today) .day-miladi { color: #e0a84a !important; }
   .day-cell.fuel-period-4:not(.today) .day-miladi { color: #c064dc !important; }
+
+  .day-cell.selected.fuel-period-0:not(.today) .day-miladi,
+  .day-cell.selected.fuel-period-1:not(.today) .day-miladi,
+  .day-cell.selected.fuel-period-2:not(.today) .day-miladi,
+  .day-cell.selected.fuel-period-3:not(.today) .day-miladi,
+  .day-cell.selected.fuel-period-4:not(.today) .day-miladi { color: #ffffff !important; }
+
+  /* ─── Fuel Info Bar ──────────────────────────────────────── */
+  .fuel-info-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(224,168,74,0.1) 0%, rgba(15,52,96,0.35) 100%);
+    border: 1px solid rgba(224,168,74,0.4);
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--light);
+    animation: fadeIn 0.4s ease;
+  }
+  .fuel-info-bar.visible { display: flex; }
+  .fuel-info-bar-text { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fuel-info-label { color: var(--muted); font-size: 11px; }
+  .fuel-info-date { color: var(--accent2); font-weight: 700; }
+  .fuel-info-sep { color: var(--border); margin: 0 2px; }
+  .fuel-info-next { color: #8fc4e0; font-weight: 600; }
+  .fuel-info-cancel {
+    background: none;
+    border: 1px solid rgba(232,122,122,0.4);
+    color: #e87a7a;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'Tajawal', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .fuel-info-cancel:hover { background: rgba(232,122,122,0.15); border-color: #e87a7a; }
 </style>
 </head>
 <body>
@@ -1047,6 +1090,15 @@
         <div class="selected-date" id="selectedDate"></div>
       </div>
     </div>
+    <!-- Fuel Info Bar -->
+    <div class="fuel-info-bar" id="fuelInfoBar">
+      <div class="fuel-info-bar-text">
+        <span>⛽</span>
+        <span class="fuel-info-label">استلام الحصة التالي:</span>
+        <span class="fuel-info-next" id="fuelInfoNextCountdown">—</span>
+      </div>
+    </div>
+
     <div class="shift-info-panel" id="shiftInfoPanel">
       <div class="shift-info-block">
         <div class="shift-info-label">الوجبة الآن</div>
@@ -1917,12 +1969,50 @@ function toggleFuelCalendar() {
   if (fuelCalActive) {
     icon.classList.add('fuel-cal-icon-active');
     fuelShowStatus('⛽ تم تفعيل تلوين البنزين كل ٥ أيام');
+    updateFuelInfoBar();
   } else {
     icon.classList.remove('fuel-cal-icon-active');
     fuelShowStatus('تم إيقاف تلوين البنزين');
+    document.getElementById('fuelInfoBar').classList.remove('visible');
   }
   window.renderMiladi();
 }
+
+function cancelFuelCalendar() {
+  fuelCalActive = false;
+  const icon = document.getElementById('fuelCalIcon');
+  icon.classList.remove('fuel-cal-icon-active');
+  document.getElementById('fuelInfoBar').classList.remove('visible');
+  fuelShowStatus('تم إيقاف تلوين البنزين');
+  window.renderMiladi();
+}
+
+function formatCountdownFull(ms) {
+  if (ms <= 0) return 'الآن';
+  const totalMins = Math.floor(ms / 60000);
+  const days = Math.floor(totalMins / 1440);
+  const hours = Math.floor((totalMins % 1440) / 60);
+  const mins  = totalMins % 60;
+  let parts = [];
+  if (days  > 0) parts.push(`${days} يوم`);
+  if (hours > 0) parts.push(`${hours} ساعة`);
+  if (parts.length === 0 && mins > 0) parts.push(`${mins} دقيقة`);
+  return 'بعد ' + parts.join(' و');
+}
+
+function updateFuelInfoBar() {
+  if (!fuelCalActive) return;
+  const bar = document.getElementById('fuelInfoBar');
+  bar.classList.add('visible');
+
+  // Next fuel date
+  const nextFuelDate = getNextFuelDate();
+  const msToNext = nextFuelDate - new Date();
+  document.getElementById('fuelInfoNextCountdown').textContent = formatCountdownFull(Math.max(0, msToNext));
+}
+
+// Update countdown every minute when bar is visible
+setInterval(() => { if (fuelCalActive) updateFuelInfoBar(); }, 60000);
 
 function applyFuelColoring() {
   if (!fuelCalActive) return;
