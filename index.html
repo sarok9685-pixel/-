@@ -184,9 +184,9 @@
   .day-name {
     text-align: center;
     padding: 10px 0;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 500;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.2px;
     color: var(--muted);
   }
 
@@ -1001,6 +1001,24 @@
   .day-cell.selected.fuel-period-3:not(.today) .day-miladi,
   .day-cell.selected.fuel-period-4:not(.today) .day-miladi { color: #ffffff !important; }
 
+  /* ─── Fuel Marked Date (manual fuel day) ──────────────────── */
+  .day-cell.fuel-marked:not(.today) {
+    background: linear-gradient(135deg, rgba(224,140,0,0.55), rgba(180,80,0,0.45)) !important;
+    border: 2px solid #ff9900 !important;
+    box-shadow: 0 0 14px rgba(255,153,0,0.5), inset 0 0 8px rgba(255,180,0,0.15) !important;
+  }
+  .day-cell.fuel-marked:not(.today) .day-miladi { color: #fff !important; font-weight: 700 !important; }
+  .day-cell.fuel-marked:not(.today) .day-hijri-sub { color: rgba(255,220,150,0.9) !important; opacity: 1 !important; }
+  .day-cell.fuel-marked:not(.today)::after {
+    content: '⛽';
+    position: absolute;
+    font-size: 9px;
+    bottom: 2px;
+    right: 3px;
+    opacity: 0.85;
+    line-height: 1;
+  }
+
   /* ─── Fuel Info Bar ──────────────────────────────────────── */
   .fuel-info-bar {
     display: none;
@@ -1076,13 +1094,13 @@
     <div class="sub-calendar-info" id="miladiSubInfo"></div>
     <div class="calendar-grid">
       <div class="day-names">
-        <div class="day-name">أحد</div>
-        <div class="day-name">إثن</div>
-        <div class="day-name">ثلث</div>
-        <div class="day-name">أرب</div>
-        <div class="day-name">خمس</div>
-        <div class="day-name">جمع</div>
-        <div class="day-name">سبت</div>
+        <div class="day-name">الأحد</div>
+        <div class="day-name">الإثنين</div>
+        <div class="day-name">الثلاثاء</div>
+        <div class="day-name">الأربعاء</div>
+        <div class="day-name">الخميس</div>
+        <div class="day-name">الجمعة</div>
+        <div class="day-name">السبت</div>
       </div>
       <div class="days-grid" id="daysGrid"></div>
       <div class="footer">
@@ -1096,6 +1114,11 @@
         <span>⛽</span>
         <span class="fuel-info-label">استلام الحصة التالي:</span>
         <span class="fuel-info-next" id="fuelInfoNextCountdown">—</span>
+      </div>
+      <div class="fuel-info-bar-text" id="fuelMarkedRow" style="display:none;">
+        <span>📌</span>
+        <span class="fuel-info-label">آخر تفويل:</span>
+        <span class="fuel-info-date" id="fuelMarkedDisplay" style="color:#ff9900;font-weight:700;">—</span>
       </div>
     </div>
 
@@ -1151,6 +1174,17 @@
         <div class="about-block-body">يمكن تفعيل تنبيهات تلقائية قبل بداية كل وجبة من قسم المنبهات.</div>
       </div>
 
+      <div class="about-block">
+        <div class="about-block-title">⛽ بطاقة البنزين</div>
+        <div class="about-block-body">
+          اضغط على أيقونة ⛽ في أعلى التقويم لتفعيل تلوين حصص البنزين.<br><br>
+          • تُلوَّن أيام التقويم بـ ٥ ألوان تمثل دورات الاستلام كل ٥ أيام ابتداءً من ٢٥/٥/٢٠٢٥.<br><br>
+          • يظهر شريط أسفل التقويم يعرض موعد استلام الحصة القادمة مع عداد تنازلي.<br><br>
+          • لتحديد يوم التفويل يدوياً: اضغط على اليوم مرتين، فتتغير خلفيته إلى برتقالي بارز مع أيقونة ⛽.<br><br>
+          • الضغط مرة ثالثة على نفس اليوم يلغي التعليم.
+        </div>
+      </div>
+
       <div class="about-footer">صُمِّم بعناية لمتابعة جداول العمل بدقة</div>
     </div>
   </div>
@@ -1182,13 +1216,13 @@
     <div class="sub-calendar-info hijri-info" id="hijriSubInfo"></div>
     <div class="calendar-grid">
       <div class="day-names hijri-names">
-        <div class="day-name">أحد</div>
-        <div class="day-name">إثن</div>
-        <div class="day-name">ثلث</div>
-        <div class="day-name">أرب</div>
-        <div class="day-name">خمس</div>
-        <div class="day-name">جمع</div>
-        <div class="day-name">سبت</div>
+        <div class="day-name">الأحد</div>
+        <div class="day-name">الإثنين</div>
+        <div class="day-name">الثلاثاء</div>
+        <div class="day-name">الأربعاء</div>
+        <div class="day-name">الخميس</div>
+        <div class="day-name">الجمعة</div>
+        <div class="day-name">السبت</div>
       </div>
       <div class="days-grid" id="hijriDaysGrid"></div>
       <div class="footer hijri-footer">
@@ -1267,6 +1301,7 @@ function daysInHijriMonth(hYear, hMonth) {
 const now = new Date();
 let current = { month: now.getMonth(), year: now.getFullYear() };
 let selectedM = null;
+let fuelMarkedDate = null; // التاريخ المحدد يدوياً كيوم تفويل
 let activeTab = 'miladi';
 
 const todayH = gregorianToHijri(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -1340,10 +1375,16 @@ function renderMiladi() {
     }
 
     cell.addEventListener('click', () => {
+      // تحديد يوم تفويل فقط عند تفعيل بطاقة البنزين
+      if (fuelCalActive && selectedM && selectedM.d === d && selectedM.m === current.month && selectedM.y === current.year) {
+        const alreadyMarked = fuelMarkedDate && fuelMarkedDate.d === d && fuelMarkedDate.m === current.month && fuelMarkedDate.y === current.year;
+        fuelMarkedDate = alreadyMarked ? null : { d, m: current.month, y: current.year };
+        updateFuelInfoBar();
+      }
       selectedM = { d, m: current.month, y: current.year };
       const hd = gregorianToHijri(current.year, current.month + 1, d);
       document.getElementById('selectedDate').textContent =
-        `${dayNames[dow]}، ${d} ${miladiMonths[current.month]} | ${hd.hDay} ${hijriMonths[hd.hMonth-1]} ${hd.hYear}هـ`;
+        `${dayNames[dow]}، ${d}/${current.month + 1}/${current.year} | ${hd.hDay}/${hd.hMonth}/${hd.hYear}هـ`;
       renderMiladi();
     });
     grid.appendChild(cell);
@@ -2009,6 +2050,16 @@ function updateFuelInfoBar() {
   const nextFuelDate = getNextFuelDate();
   const msToNext = nextFuelDate - new Date();
   document.getElementById('fuelInfoNextCountdown').textContent = formatCountdownFull(Math.max(0, msToNext));
+
+  // Manually marked fuel date
+  const markedRow = document.getElementById('fuelMarkedRow');
+  const markedDisplay = document.getElementById('fuelMarkedDisplay');
+  if (fuelMarkedDate) {
+    markedDisplay.textContent = `${fuelMarkedDate.d}/${fuelMarkedDate.m + 1}/${fuelMarkedDate.y}`;
+    markedRow.style.display = 'flex';
+  } else {
+    markedRow.style.display = 'none';
+  }
 }
 
 // Update countdown every minute when bar is visible
