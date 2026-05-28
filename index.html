@@ -1197,7 +1197,7 @@
     </div>
     <div class="alarm-combo-body" id="alarmComboBody">
       <div class="alarm-list" id="alarmList"></div>
-      <button class="alarm-set-all" id="alarmToggleAllBtn" onclick="setAllAlarms()">تفعيل جميع المنبهات</button>
+      <button class="alarm-set-all" id="alarmToggleAllBtn" onclick="setAllAlarms()">🔔 تفعيل جميع المنبهات</button>
       <div class="alarm-status" id="alarmStatus"></div>
     </div>
   </div>
@@ -1608,17 +1608,45 @@ function toggleShiftFilter(cls) {
   activeShiftFilter = wasActive ? null : cls;
   applyShiftFilter();
 
-  // عند اختيار وجبة → تفعيل جميع التنبيهات تلقائياً
   if (!wasActive) {
-    ALARMS.forEach(a => {
+    // خريطة الوجبة إلى index
+    const clsToIndex = { A: 0, B: 1, C: 2, D: 3 };
+    const targetIndex = clsToIndex[cls];
+
+    // أوقات البصمات لكل وجبة
+    const shiftAlarmHours = {
+      0: [7, 13, 18],       // وجبة أ
+      1: [13, 18, 23],      // وجبة ب
+      2: [18, 23],          // وجبة ج (+ 07 الغد)
+      3: [23],              // وجبة د (+ 07 نفس اليوم + 07 الغد)
+    };
+
+    // احسب متى تبدأ أقرب دورة للوجبة المختارة
+    const now2 = new Date();
+    let daysOffset = 0;
+    for (let i = 0; i < 4; i++) {
+      const check = new Date(now2);
+      check.setDate(check.getDate() + i);
+      check.setHours(7, 0, 0, 0);
+      if (getShiftAtTime(check).index === targetIndex) { daysOffset = i; break; }
+    }
+
+    // فعّل جميع التنبيهات مع ضبط daysOffset
+    ALARMS.filter(a => !a.fuelAlarm).forEach(a => {
       alarmStates[a.id] = true;
       localStorage.setItem('alarmState_' + a.id, 'true');
+      a._daysOffset = a.nextDay ? daysOffset + 1 : daysOffset;
     });
+
     renderAlarms();
-    showAlarmStatus(`✅ تم تفعيل جميع التنبيهات لوجبة ${cls === 'A' ? 'أ' : cls === 'B' ? 'ب' : cls === 'C' ? 'ج' : 'د'}`);
+    const shiftNames = { A:'أ', B:'ب', C:'ج', D:'د' };
+    const msg = daysOffset === 0
+      ? `✅ تم تفعيل منبهات وجبة ${shiftNames[cls]}`
+      : `✅ تم تفعيل منبهات وجبة ${shiftNames[cls]} — تبدأ بعد ${daysOffset} يوم`;
+    showAlarmStatus(msg);
     requestNotificationPermission();
   } else {
-    ALARMS.forEach(a => {
+    ALARMS.filter(a => !a.fuelAlarm).forEach(a => {
       alarmStates[a.id] = false;
       localStorage.setItem('alarmState_' + a.id, 'false');
     });
@@ -1819,7 +1847,8 @@ function renderAlarms() {
     // Check if this alarm is "next" (upcoming today)
     const alarmToday = new Date();
     alarmToday.setHours(a.hour, a.min, 0, 0);
-    if (a.nextDay) alarmToday.setDate(alarmToday.getDate() + 1);
+    const offset = a._daysOffset || (a.nextDay ? 1 : 0);
+    if (offset > 0) alarmToday.setDate(alarmToday.getDate() + offset);
     const msLeft = alarmToday - now3;
     const upcoming = msLeft > 0 && msLeft < 3 * 60 * 60 * 1000 && alarmStates[a.id];
     const timeUntil = msLeft > 0 ? formatCountdown(msLeft) : '';
@@ -1859,6 +1888,35 @@ function toggleAlarm(id) {
       : `🔕 تم إيقاف منبه ${alarm.label}`
     );
   }
+}
+
+function setCurrentShiftAlarm() {
+  // Determine current shift index
+  const shiftNow = getShiftAtTime(new Date());
+  const shiftIndex = shiftNow.index; // 0=أ,1=ب,2=ج,3=د
+
+  // Map shift index to alarm IDs
+  // وجبة أ (index 0): 07:00 بداية, 13:00, 18:00 → alarm-07, alarm-13, alarm-18
+  // وجبة ب (index 1): 13:00, 18:00, 23:00 → alarm-13, alarm-18, alarm-23
+  // وجبة ج (index 2): 18:00, 23:00, 07:00n → alarm-18, alarm-23, alarm-07n
+  // وجبة د (index 3): 23:00, 07:00, 07:00n → alarm-23, alarm-07, alarm-07n
+  const shiftAlarmMap = {
+    0: ['alarm-07', 'alarm-13', 'alarm-18'],
+    1: ['alarm-13', 'alarm-18', 'alarm-23'],
+    2: ['alarm-18', 'alarm-23', 'alarm-07n'],
+    3: ['alarm-23', 'alarm-07', 'alarm-07n'],
+  };
+  const activeIds = shiftAlarmMap[shiftIndex] || [];
+
+  ALARMS.filter(a => !a.fuelAlarm).forEach(a => {
+    alarmStates[a.id] = activeIds.includes(a.id);
+    localStorage.setItem('alarmState_' + a.id, String(alarmStates[a.id]));
+  });
+
+  const shiftNames = ['أ','ب','ج','د'];
+  renderAlarms();
+  showAlarmStatus(`✅ تم تفعيل منبهات وجبة ${shiftNames[shiftIndex]} فقط`);
+  requestNotificationPermission();
 }
 
 function setAllAlarms() {
